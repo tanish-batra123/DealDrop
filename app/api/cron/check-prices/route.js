@@ -15,19 +15,17 @@ export async function POST(request) {
     const cronSecret = process.env.CRON_SECRET;
 
     if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json(
-        { error: "unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.Next_js_service_role_key // ensure correct env var name
+      process.env.SUPABASE_SERVICE_ROLE_KEY 
     );
 
-    const { data: products, error: productError } =
-      await supabase.from("products").select("*");
+    const { data: products, error: productError } = await supabase
+      .from("products")
+      .select("*");
 
     if (productError) throw productError;
 
@@ -74,13 +72,21 @@ export async function POST(request) {
           result.priceChanges++;
 
           if (newPrice < oldPrice) {
-            const { data, error } =
-              await supabase.auth.admin.getUserById(product.user_id);
+            const { data, error } = await supabase.auth.admin.getUserById(
+              product.user_id
+            );
 
             if (!error && data?.user?.email) {
-              const emailResult=await SendPriceDropAlert(UserEmail,product,oldPrice,newPrice)
-              if(emailResult.success) result.alertsSent++;
-             
+              const userEmail = data.user.email;
+
+              const emailResult = await SendPriceDropAlert(
+                userEmail,
+                product,
+                oldPrice,
+                newPrice
+              );
+
+              if (emailResult.success) result.alertsSent++;
             }
           }
         }
