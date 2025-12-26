@@ -111,10 +111,6 @@ if (shouldAddHistory) {
 export async function deleteProduct(productId) {
   try {
     const supabase = await createClient();
-
-    // Delete price history first
-    await supabase.from("pricehistory").delete().eq("product_id", productId);
-
     const { error } = await supabase
       .from("products")
       .delete()
@@ -128,6 +124,7 @@ export async function deleteProduct(productId) {
     return { error: error.message };
   }
 }
+
 
 export async function getProducts() {
   try {

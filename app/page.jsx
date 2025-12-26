@@ -67,7 +67,7 @@ export default async function Home() {
           </div>
 
           <div className="hero-sectioncard">
-            {user&& products.length==0&&FEATURES.map((item, idx) => {
+            {!user&&FEATURES.map((item, idx) => {
               const Icon = item.icon;
               return (
                 <div className="feature-card" key={idx}>
