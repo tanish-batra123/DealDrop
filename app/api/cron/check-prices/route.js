@@ -20,9 +20,10 @@ export async function POST(request) {
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY 
+      process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
+    // Fetch all products
     const { data: products, error: productError } = await supabase
       .from("products")
       .select("*");
@@ -41,6 +42,7 @@ export async function POST(request) {
 
     for (const product of products) {
       try {
+        // Scrape product price
         const productData = await ScrapProducts(product.url);
 
         if (!productData) {
@@ -48,9 +50,10 @@ export async function POST(request) {
           continue;
         }
 
-        const newPrice = parseFloat(productData.currentPrice);
         const oldPrice = parseFloat(product.current_price);
+        const newPrice = parseFloat(productData.currentPrice);
 
+        // Update product info
         await supabase
           .from("products")
           .update({
@@ -62,6 +65,7 @@ export async function POST(request) {
           })
           .eq("id", product.id);
 
+        // If price changed, insert into priceHistory
         if (oldPrice !== newPrice) {
           await supabase.from("priceHistory").insert({
             product_id: product.id,
@@ -71,22 +75,33 @@ export async function POST(request) {
 
           result.priceChanges++;
 
+          // Send alert if price dropped (even manually changed)
           if (newPrice < oldPrice) {
-            const { data, error } = await supabase.auth.admin.getUserById(
-              product.user_id
-            );
-
-            if (!error && data?.user?.email) {
-              const userEmail = data.user.email;
-
-              const emailResult = await SendPriceDropAlert(
-                userEmail,
-                product,
-                oldPrice,
-                newPrice
+            try {
+              const { data, error } = await supabase.auth.admin.getUserById(
+                product.user_id
               );
 
-              if (emailResult.success) result.alertsSent++;
+              if (!error && data?.user?.email) {
+                const userEmail = data.user.email;
+                console.log(
+                  `Sending alert to ${userEmail} for ${product.name}: ${oldPrice} → ${newPrice}`
+                );
+
+                const emailResult = await SendPriceDropAlert(
+                  userEmail,
+                  product,
+                  oldPrice,
+                  newPrice
+                );
+
+                if (emailResult.success) result.alertsSent++;
+              }
+            } catch (alertErr) {
+              console.error(
+                `Failed to send alert for product ${product.id}`,
+                alertErr
+              );
             }
           }
         }
