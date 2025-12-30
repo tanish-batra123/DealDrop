@@ -1,3 +1,35 @@
+🛍️ Deal Drop — Smart Price Tracking & Price-Drop Alerts
+Deal Drop is a price-tracking web application built using Next.js, Supabase, and Firecrawl that allows users to add products, automatically tracks price changes, and sends email alerts whenever a price drops or updates. The app also provides an interactive price-history graph to help users analyze trends and make informed purchase decisions.
+🚀 Features
+✔ Add products to a personal watchlist
+✔ Automated web scraping using Firecrawl
+✔ Background price monitoring with cron jobs
+✔ Real-time email notifications on price change
+✔ Historical price-trend graph & insights
+✔ Supabase database + storage
+✔ Secure API routes & validation
+🛠️ Tech Stack
+Frontend: Next.js (App Router), React
+Backend: Supabase
+Scraping Engine: Firecrawl
+Email Service: SMTP / Supabase functions
+Other: Cron Jobs, Webhooks, Node.js
+
+Architecture Overview:
+User → Add Product → Store in Supabase
+           ↓
+     Cron Job Scheduler
+           ↓
+   Firecrawl Scraper fetches price
+           ↓
+  Price change detected? → Yes
+           ↓
+   Save to price_history + Send Email
+           ↓
+   Show price graph in dashboard
+
+   
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
